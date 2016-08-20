@@ -1,0 +1,229 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/google-map/google-map.html">
+<!-- <link rel="import" href="../bower_components/app-storage/app-indexeddb-mirror/app-indexeddb-mirror.html"> -->
+<link rel="import" href="../bower_components/geo-location/geo-location.html">
+<link rel="import" href="../bower_components/idb-node/idb-node.html">
+<link rel="import" href="../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../bower_components/app-layout/app-grid/app-grid-style.html">
+<dom-module id="my-view1">
+
+  <template>
+
+    <style include="app-grid-style">
+      :host {
+        display: block;
+        padding: 10px;
+      }
+      .card {
+        box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
+        padding: 16px;
+        margin: 24px;
+        border-radius: 5px;
+        background-color: #fff;
+        color: #757575;
+      }
+      .circle {
+        display: inline-block;
+        height: 64px;
+        width: 64px;
+        border-radius: 50%;
+        background: #ddd;
+        line-height: 64px;
+        font-size: 30px;
+        color: #555;
+        text-align: center;
+      }
+      h1 {
+        font-size: 22px;
+        margin: 16px 0;
+        color: #212121;
+      }
+      google-map {
+        height: 600px;
+      }
+      paper-card {
+        box-sizing: border-box;
+        max-width: 184px;
+        margin: 4px;
+        flex: 0 0 auto;
+      }
+      .col {
+        --app-grid-columns: 3;
+        --app-grid-item-height: 100px;
+      }
+
+    </style>
+    
+    <!--<firebase-query
+        id="query"
+        path="/fleets"
+        data="{{fleets}}">
+    </firebase-query>-->
+
+    <!--<app-indexeddb-mirror id="updatesFleets"
+      key="/fleets"
+      data="[[fleets]]"
+      persisted-data="{{activeFleets}}"
+      >
+    </app-indexeddb-mirror>-->
+    <idb-node id="db" database-name="idb-fleets-1" version="1" object-store="fleets" key-path="id"></idb-node>
+    <template is="dom-if" if="{{online}}">
+      <div class="card">
+        <geo-location latitude="{{currentLat}}" longitude="{{currentLng}}"></geo-location>
+        <google-map zoom="12" latitude="[[currentLat]]" longitude="[[currentLng]]" map="{{map}}"  api-key="AIzaSyCl1xcLoRekaS0BZljwkv2fWdX4RzcBqn0">
+          <template is="dom-repeat" items="[[persistedData]]" as="fleet">
+            <google-map-marker map="[[map]]" latitude="[[fleet.latitude]]" longitude="[[fleet.longitude]]" title="[[fleet.name]]" draggable="false">
+                <span>[[fleet.name]]</span>
+            </google-map-marker>
+          </template>
+        </google-map>
+      </div>
+    </template>
+    <template is="dom-if" if="{{!online}}">
+      <div class="col">
+        <div class="app-grid">
+            <template is="dom-repeat" items="[[persistedData]]" as="fleet">
+              <paper-card heading="[[fleet.name]]"  class="cyan">
+                <div class="card-actions"> 
+                  <div><img width="74px" height="56px" src="../images/catLogo.jpg"></div>
+                   <paper-icon-button icon="maps:place"></paper-icon-button>
+                  <div><span>Lat: [[fleet.latitude]]<span></div>
+                  <div> Lng: [[fleet.longitude]]</div>
+                </div>
+              </paper-card>
+            </template>
+        </div>
+      </div>
+    </template>
+        
+      
+
+  </template>
+
+  <script>
+
+    Polymer({
+
+      is: 'my-view1',
+      properties: {
+        fleets: {
+          type: Array,
+          notify: true
+        },
+        map: Object,
+        persistedData: Array,
+        online: {
+          type: Boolean,
+          value: function() {
+            return navigator.onLine;
+          },
+          notify: true
+        }
+      },
+      ready: function() {
+        var idb = document.querySelector('idb-node');
+        idb.addEventListener('idb-ready', function() {
+          console.log('database ready');
+          var db = document.querySelector('#db');  
+          if(db){      
+              db.getAll().then(function(fleetdata) {
+              this.persistedData = fleetdata;
+            }.bind(this));
+          }
+          
+
+          var ref = firebase.database().ref('fleets');
+          ref.on('value', function(snapshot) {
+            console.log(snapshot.val());
+            console.log(this._toArray(snapshot.val()));
+            this.fleets = this._toArray(snapshot.val());
+            // this.fleets = this.fleets.map(function(fleet) {
+            //   return {
+            //     name: fleet.name,
+            //     latitude: +fleet.latitude,
+            //     longitude: +fleet.longitude
+            //   };
+            // });
+
+            idb.putBulk(this.fleets).then(function() {
+              console.log('Initial fleet data saved');
+            });
+
+            db.getAll().then(function(fleetdata) {
+              this.persistedData = fleetdata;
+            }.bind(this));
+          }.bind(this));
+        }.bind(this));
+
+        window.addEventListener('online', function() {
+          this.online = true;
+        }.bind(this));
+        window.addEventListener('offline', function() {
+          this.online = false;
+        }.bind(this));
+      },
+
+      _toArray: function(obj) {
+        return Object.keys(obj).map(function(key) {
+          var fleet = obj[key];
+          fleet['id'] = key;      
+          return fleet;
+        });
+      },
+
+      _openDatabase: function () {
+        
+        if (!navigator.serviceWorker) {
+          return Promise.resolve();
+        }
+
+        return idb.open('assetStore',3, function(upgradeDb) {
+          
+          var store = upgradeDb.createObjectStore('assets', {
+            keyPath: 'name'
+          });  
+        });
+      },
+
+      _dbPromise: function() {
+        return this._openDatabase();  
+      },
+
+      _addData: function(data) { 
+        this._dbPromise().then(function(db) {
+          if (!db) return;
+          var tx = db.transaction('assets', 'readwrite');
+          var store = tx.objectStore('assets');
+          data.forEach(function(asset) {
+            store.put(asset);
+          });
+        });
+      },
+
+      _getIDBData: function(){
+        return this._dbPromise().then(function(db) {   
+          if (!db) return;
+
+          var assetList = db.transaction('assets')
+            .objectStore('assets');
+          console.log('Asset list', assetList.getAll());
+          return assetList.getAll()
+        });
+      }
+     
+
+    });
+
+  </script>
+
+</dom-module>
