@@ -10,11 +10,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/google-map/google-map.html">
-<!-- <link rel="import" href="../bower_components/app-storage/app-indexeddb-mirror/app-indexeddb-mirror.html"> -->
 <link rel="import" href="../bower_components/geo-location/geo-location.html">
 <link rel="import" href="../bower_components/idb-node/idb-node.html">
 <link rel="import" href="../bower_components/paper-card/paper-card.html">
 <link rel="import" href="../bower_components/app-layout/app-grid/app-grid-style.html">
+
 <dom-module id="my-view1">
 
   <template>
@@ -51,9 +51,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       google-map {
         height: 600px;
       }
-      paper-card {
+      #accounts {
+        @apply(--layout-vertical);
+        @apply(--layout-wrap);
+        /*height: 344px;
+        width: 384px;*/
+      }
+
+      #accounts > paper-card {
         box-sizing: border-box;
-        max-width: 184px;
+        /*max-width: 184px;*/
         margin: 4px;
         flex: 0 0 auto;
       }
@@ -64,20 +71,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     </style>
     
-    <!--<firebase-query
-        id="query"
-        path="/fleets"
-        data="{{fleets}}">
-    </firebase-query>-->
-
-    <!--<app-indexeddb-mirror id="updatesFleets"
-      key="/fleets"
-      data="[[fleets]]"
-      persisted-data="{{activeFleets}}"
-      >
-    </app-indexeddb-mirror>-->
-    <idb-node id="db" database-name="idb-fleets-1" version="1" object-store="fleets" key-path="id"></idb-node>
-    <template is="dom-if" if="{{online}}">
+    <idb-node id="db" database-name="idb-sf2" version="1" object-store="accounts" key-path="Id"></idb-node>
+    <!-- <template is="dom-if" if="{{online}}">
       <div class="card">
         <geo-location latitude="{{currentLat}}" longitude="{{currentLng}}"></geo-location>
         <google-map zoom="12" latitude="[[currentLat]]" longitude="[[currentLng]]" map="{{map}}"  api-key="AIzaSyCl1xcLoRekaS0BZljwkv2fWdX4RzcBqn0">
@@ -88,9 +83,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           </template>
         </google-map>
       </div>
-    </template>
-    <template is="dom-if" if="{{!online}}">
-      <div class="col">
+    </template> -->
+    <!-- <template is="dom-if" if="{{!online}}"> -->
+      <!-- <div class="col">
         <div class="app-grid">
             <template is="dom-repeat" items="[[persistedData]]" as="fleet">
               <paper-card heading="[[fleet.name]]"  class="cyan">
@@ -103,8 +98,24 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
               </paper-card>
             </template>
         </div>
-      </div>
-    </template>
+      </div> -->
+      <template is="dom-if" if="[[!isLoggedIn]]">
+        <button on-tap="_login">Login</button>
+      </template>
+      <template is="dom-if" if="[[isLoggedIn]]">
+        <button on-tap="_logout">Logout</button>
+        <button on-tap="_queryAccounts">Query</button>
+        <template is="dom-repeat" items="[[accounts]]" as="account">
+          <div id="accounts">
+            <paper-card heading="[[account.Name]]"  class="cyan">
+              <!-- <div class="card-actions"> 
+                <div><img width="74px" height="56px" src="../images/catLogo.jpg"></div>
+              </div> -->
+            </paper-card>
+          </div>
+        </template>
+      </template>
+    <!-- </template> -->
         
       
 
@@ -116,11 +127,24 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
       is: 'my-view1',
       properties: {
-        fleets: {
-          type: Array,
-          notify: true
+        conn: {
+          type: Object
         },
-        map: Object,
+        isLoggedIn: {
+          type: Boolean,
+          value: function() {
+            return jsforce.browser.isLoggedIn();
+          }
+        },
+        accounts: {
+          type: Array
+        },
+        isDbReady: {
+          type: Boolean,
+          value: function() {
+            return false;
+          }
+        },
         persistedData: Array,
         online: {
           type: Boolean,
@@ -131,38 +155,44 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         }
       },
       ready: function() {
+        if(this.isLoggedIn) {
+          this.conn = jsforce.browser.connection;
+          this._queryAccounts();
+        } else {
+          jsforce.browser.on('connect', function(conn) {
+            this.conn = conn;
+          }.bind(this));
+        }
+        
         var idb = document.querySelector('idb-node');
+        this.idb = idb;
         idb.addEventListener('idb-ready', function() {
-          console.log('database ready');
-          var db = document.querySelector('#db');  
-          if(db){      
-              db.getAll().then(function(fleetdata) {
-              this.persistedData = fleetdata;
-            }.bind(this));
-          }
+          this.isDbReady = true;
+          this.db = document.querySelector('#db');
+
+          // console.log('database ready');
+          // var db = document.querySelector('#db');  
+          // if(db){      
+          //     db.getAll().then(function(fleetdata) {
+          //     this.persistedData = fleetdata;
+          //   }.bind(this));
+          // }
           
 
-          var ref = firebase.database().ref('fleets');
-          ref.on('value', function(snapshot) {
-            console.log(snapshot.val());
-            console.log(this._toArray(snapshot.val()));
-            this.fleets = this._toArray(snapshot.val());
-            // this.fleets = this.fleets.map(function(fleet) {
-            //   return {
-            //     name: fleet.name,
-            //     latitude: +fleet.latitude,
-            //     longitude: +fleet.longitude
-            //   };
-            // });
+          // var ref = firebase.database().ref('fleets');
+          // ref.on('value', function(snapshot) {
+          //   console.log(snapshot.val());
+          //   console.log(this._toArray(snapshot.val()));
+          //   this.fleets = this._toArray(snapshot.val());
 
-            idb.putBulk(this.fleets).then(function() {
-              console.log('Initial fleet data saved');
-            });
+          //   idb.putBulk(this.fleets).then(function() {
+          //     console.log('Initial fleet data saved');
+          //   });
 
-            db.getAll().then(function(fleetdata) {
-              this.persistedData = fleetdata;
-            }.bind(this));
-          }.bind(this));
+          //   db.getAll().then(function(fleetdata) {
+          //     this.persistedData = fleetdata;
+          //   }.bind(this));
+          // }.bind(this));
         }.bind(this));
 
         window.addEventListener('online', function() {
@@ -172,54 +202,98 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           this.online = false;
         }.bind(this));
       },
+      _login: function() {
+        jsforce.browser.login(function(err, res) {
+          if(err) {
+            console.error('Error logging in: ', err);
+            return;
+          }
+          console.log(res);
+          if(res.status === 'connect') {
+            this.isLoggedIn = true;
+            this._queryAccounts();
+          } else {
+            this.isLoggedIn = false;
+            console.error('Error logging in: ', res);
+          }
 
-      _toArray: function(obj) {
-        return Object.keys(obj).map(function(key) {
-          var fleet = obj[key];
-          fleet['id'] = key;      
-          return fleet;
-        });
-      },
-
-      _openDatabase: function () {
+        }.bind(this));
         
-        if (!navigator.serviceWorker) {
-          return Promise.resolve();
+      },
+      _logout: function() {
+        jsforce.browser.logout()
+        this.isLoggedIn = false;
+        this.accounts = [];
+      },
+      _queryAccounts: function() {
+        if(this.isDbReady) {
+          this.db.getAll()
+            .then(function(accounts) {
+              this.accounts = accounts;
+              if(this.accounts && this.accounts.length === 0) {
+                this.conn.query('SELECT Id, Name FROM Account')
+                  .then(function(res) {
+                    console.log(res);
+                    this.accounts = res.records;
+                    this.idb.putBulk(this.accounts)
+                      .then(function() {
+                        console.log('Initial accounts data saved');
+                      })
+                  }.bind(this),function(err) {
+                    console.error(err);
+                  });
+              }
+            }.bind(this));
         }
+        
+      },
+      // _toArray: function(obj) {
+      //   return Object.keys(obj).map(function(key) {
+      //     var fleet = obj[key];
+      //     fleet['id'] = key;      
+      //     return fleet;
+      //   });
+      // },
 
-        return idb.open('assetStore',3, function(upgradeDb) {
+      // _openDatabase: function () {
+        
+      //   if (!navigator.serviceWorker) {
+      //     return Promise.resolve();
+      //   }
+
+      //   return idb.open('assetStore',3, function(upgradeDb) {
           
-          var store = upgradeDb.createObjectStore('assets', {
-            keyPath: 'name'
-          });  
-        });
-      },
+      //     var store = upgradeDb.createObjectStore('assets', {
+      //       keyPath: 'name'
+      //     });  
+      //   });
+      // },
 
-      _dbPromise: function() {
-        return this._openDatabase();  
-      },
+      // _dbPromise: function() {
+      //   return this._openDatabase();  
+      // },
 
-      _addData: function(data) { 
-        this._dbPromise().then(function(db) {
-          if (!db) return;
-          var tx = db.transaction('assets', 'readwrite');
-          var store = tx.objectStore('assets');
-          data.forEach(function(asset) {
-            store.put(asset);
-          });
-        });
-      },
+      // _addData: function(data) { 
+      //   this._dbPromise().then(function(db) {
+      //     if (!db) return;
+      //     var tx = db.transaction('assets', 'readwrite');
+      //     var store = tx.objectStore('assets');
+      //     data.forEach(function(asset) {
+      //       store.put(asset);
+      //     });
+      //   });
+      // },
 
-      _getIDBData: function(){
-        return this._dbPromise().then(function(db) {   
-          if (!db) return;
+      // _getIDBData: function(){
+      //   return this._dbPromise().then(function(db) {   
+      //     if (!db) return;
 
-          var assetList = db.transaction('assets')
-            .objectStore('assets');
-          console.log('Asset list', assetList.getAll());
-          return assetList.getAll()
-        });
-      }
+      //     var assetList = db.transaction('assets')
+      //       .objectStore('assets');
+      //     console.log('Asset list', assetList.getAll());
+      //     return assetList.getAll()
+      //   });
+      // }
      
 
     });
