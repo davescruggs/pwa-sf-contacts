@@ -15,6 +15,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../bower_components/paper-card/paper-card.html">
 <link rel="import" href="../bower_components/app-layout/app-grid/app-grid-style.html">
 <link rel="import" href="../bower_components/paper-spinner/paper-spinner.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
 
 <dom-module id="my-accounts-list">
 
@@ -69,24 +70,75 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         --app-grid-columns: 3;
         --app-grid-item-height: 100px;
       }
+      /*#login {
+        float: right;
+      }
+      #logout {
+        float: right;
+      }*/
+      paper-button {
+        --paper-button: {
+          @apply(--layout-horizontal);
+          /*@apply(--layout-center-center);*/
+        };
+      }
+      paper-button.custom {
+          --paper-button-ink-color: var(--paper-pink-a200);
+          /* These could also be individually defined for each of the
+            specific css classes, but we'll just do it once as an example */
+          --paper-button-flat-keyboard-focus: {
+            background-color: var(--paper-pink-a200);
+            color: white !important;
+          };
+          --paper-button-raised-keyboard-focus: {
+            background-color: var(--paper-pink-a200) !important;
+            color: white !important;
+          };
+      }
+      paper-button.custom:hover {
+        background-color: var(--paper-indigo-100);
+      }
 
+      paper-button.indigo {
+        background-color: var(--paper-indigo-500);
+        color: white;
+        --paper-button-raised-keyboard-focus: {
+          background-color: var(--paper-pink-a200) !important;
+          color: white !important;
+        };
+      }
+      a {
+        text-decoration: none;
+      }
+      .spinner {
+        position: relative;
+        min-height: 50px;
+      }
+      paper-spinner {
+        position: absolute;
+        top: 20%;
+        left: 50%;
+      }
     </style>
 
     
     <idb-node id="db" database-name="idb-sf2" version="1" object-store="accounts" key-path="Id"></idb-node>
     <template is="dom-if" if="[[!isLoggedIn]]">
-      <button on-tap="_login">Login</button>
+      <paper-button id="login" class="custom indigo" raised on-tap="_login">Login</paper-button>
     </template>
     <template is="dom-if" if="[[isLoggedIn]]">
-      <button on-tap="_logout">Logout</button>
-      <button on-tap="_queryAccounts">Query</button>
-      <paper-spinner active="[[isSpinnerActive]]" ></paper-spinner>
+      <span class="bottom" flex></span>
+      <paper-button id="logout" class="custom indigo" raised on-tap="_logout">Logout</paper-button>
+      <div class="spinner">
+        <paper-spinner active="[[isSpinnerActive]]" ></paper-spinner>
+      </div>
+      <!-- <button on-tap="_queryAccounts">Query</button> -->
       <template is="dom-repeat" items="[[accounts]]" as="account">
         <div id="accounts">
           <paper-card heading="[[account.Name]]"  class="cyan">
             <div class="card-content">
               <iron-selector selected="{{state}}" attr-for-selected="name">
-                <a name="contacts" href="/accounts/[[account.Id]]">View Account Details</a>
+                <a name="contacts" href="/accounts/[[account.Id]]"><paper-button raised>Account Details</paper-button></a>
               </iron-selector>
             </div>
             <!-- <div class="card-actions"> 

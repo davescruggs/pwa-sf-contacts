@@ -27,7 +27,8 @@
     "idb-node": "https://github.com/agektmr/idb-node.git#^0.5.2",
     "paper-card": "PolymerElements/paper-card#^1.1.2",
     "paper-spinner": "PolymerElements/paper-spinner#^1.2.0",
-    "paper-listbox": "polymerelements/paper-listbox#^1.1.2"
+    "paper-listbox": "polymerelements/paper-listbox#^1.1.2",
+    "paper-item": "PolymerElements/paper-item#^1.2.1"
   },
   "devDependencies": {
     "web-component-tester": "^4.0.0"
