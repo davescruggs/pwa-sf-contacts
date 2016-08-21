@@ -14,8 +14,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../bower_components/idb-node/idb-node.html">
 <link rel="import" href="../bower_components/paper-card/paper-card.html">
 <link rel="import" href="../bower_components/app-layout/app-grid/app-grid-style.html">
+<link rel="import" href="../bower_components/paper-spinner/paper-spinner.html">
 
-<dom-module id="my-view1">
+<dom-module id="my-accounts-list">
 
   <template>
 
@@ -70,62 +71,39 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
 
     </style>
+
     
     <idb-node id="db" database-name="idb-sf2" version="1" object-store="accounts" key-path="Id"></idb-node>
-    <!-- <template is="dom-if" if="{{online}}">
-      <div class="card">
-        <geo-location latitude="{{currentLat}}" longitude="{{currentLng}}"></geo-location>
-        <google-map zoom="12" latitude="[[currentLat]]" longitude="[[currentLng]]" map="{{map}}"  api-key="AIzaSyCl1xcLoRekaS0BZljwkv2fWdX4RzcBqn0">
-          <template is="dom-repeat" items="[[persistedData]]" as="fleet">
-            <google-map-marker map="[[map]]" latitude="[[fleet.latitude]]" longitude="[[fleet.longitude]]" title="[[fleet.name]]" draggable="false">
-                <span>[[fleet.name]]</span>
-            </google-map-marker>
-          </template>
-        </google-map>
-      </div>
-    </template> -->
-    <!-- <template is="dom-if" if="{{!online}}"> -->
-      <!-- <div class="col">
-        <div class="app-grid">
-            <template is="dom-repeat" items="[[persistedData]]" as="fleet">
-              <paper-card heading="[[fleet.name]]"  class="cyan">
-                <div class="card-actions"> 
-                  <div><img width="74px" height="56px" src="../images/catLogo.jpg"></div>
-                   <paper-icon-button icon="maps:place"></paper-icon-button>
-                  <div><span>Lat: [[fleet.latitude]]<span></div>
-                  <div> Lng: [[fleet.longitude]]</div>
-                </div>
-              </paper-card>
-            </template>
+    <template is="dom-if" if="[[!isLoggedIn]]">
+      <button on-tap="_login">Login</button>
+    </template>
+    <template is="dom-if" if="[[isLoggedIn]]">
+      <button on-tap="_logout">Logout</button>
+      <button on-tap="_queryAccounts">Query</button>
+      <paper-spinner active="[[isSpinnerActive]]" ></paper-spinner>
+      <template is="dom-repeat" items="[[accounts]]" as="account">
+        <div id="accounts">
+          <paper-card heading="[[account.Name]]"  class="cyan">
+            <div class="card-content">
+              <iron-selector selected="{{state}}" attr-for-selected="name">
+                <a name="contacts" href="/accounts/[[account.Id]]">View Account Details</a>
+              </iron-selector>
+            </div>
+            <!-- <div class="card-actions"> 
+              <div><img width="74px" height="56px" src="../images/catLogo.jpg"></div>
+            </div> -->
+          </paper-card>
         </div>
-      </div> -->
-      <template is="dom-if" if="[[!isLoggedIn]]">
-        <button on-tap="_login">Login</button>
       </template>
-      <template is="dom-if" if="[[isLoggedIn]]">
-        <button on-tap="_logout">Logout</button>
-        <button on-tap="_queryAccounts">Query</button>
-        <template is="dom-repeat" items="[[accounts]]" as="account">
-          <div id="accounts">
-            <paper-card heading="[[account.Name]]"  class="cyan">
-              <!-- <div class="card-actions"> 
-                <div><img width="74px" height="56px" src="../images/catLogo.jpg"></div>
-              </div> -->
-            </paper-card>
-          </div>
-        </template>
-      </template>
-    <!-- </template> -->
-        
+    </template>
       
-
   </template>
 
   <script>
 
     Polymer({
 
-      is: 'my-view1',
+      is: 'my-accounts-list',
       properties: {
         conn: {
           type: Object
@@ -145,6 +123,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             return false;
           }
         },
+        state: {
+          type: String,
+          value: function() {
+            return 'accounts';
+          },
+          notify: true,
+          observer: '_stateChanged'
+        },
         persistedData: Array,
         online: {
           type: Boolean,
@@ -155,45 +141,25 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         }
       },
       ready: function() {
-        if(this.isLoggedIn) {
-          this.conn = jsforce.browser.connection;
-          this._queryAccounts();
-        } else {
-          jsforce.browser.on('connect', function(conn) {
-            this.conn = conn;
-          }.bind(this));
-        }
         
-        var idb = document.querySelector('idb-node');
-        this.idb = idb;
-        idb.addEventListener('idb-ready', function() {
-          this.isDbReady = true;
-          this.db = document.querySelector('#db');
+        // var idb = document.querySelector('idb-node');
+        // this.idb = idb;
+        // if(idb) {
+          this.$.db.addEventListener('idb-ready', function() {
+            this.isDbReady = true;
+            this.db = document.querySelector('#db');
 
-          // console.log('database ready');
-          // var db = document.querySelector('#db');  
-          // if(db){      
-          //     db.getAll().then(function(fleetdata) {
-          //     this.persistedData = fleetdata;
-          //   }.bind(this));
-          // }
-          
+            if(this.isLoggedIn) {
+              this.conn = jsforce.browser.connection;
+              this._queryAccounts();
+            } else {
+              jsforce.browser.on('connect', function(conn) {
+                this.conn = conn;
+              }.bind(this));
+            }
 
-          // var ref = firebase.database().ref('fleets');
-          // ref.on('value', function(snapshot) {
-          //   console.log(snapshot.val());
-          //   console.log(this._toArray(snapshot.val()));
-          //   this.fleets = this._toArray(snapshot.val());
-
-          //   idb.putBulk(this.fleets).then(function() {
-          //     console.log('Initial fleet data saved');
-          //   });
-
-          //   db.getAll().then(function(fleetdata) {
-          //     this.persistedData = fleetdata;
-          //   }.bind(this));
-          // }.bind(this));
-        }.bind(this));
+          }.bind(this));
+        // }
 
         window.addEventListener('online', function() {
           this.online = true;
@@ -201,6 +167,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         window.addEventListener('offline', function() {
           this.online = false;
         }.bind(this));
+
+      },
+      _stateChanged: function(state) {
+        // this.state = state;
       },
       _login: function() {
         jsforce.browser.login(function(err, res) {
@@ -226,16 +196,21 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         this.accounts = [];
       },
       _queryAccounts: function() {
+
         if(this.isDbReady) {
+          this.isSpinnerActive = true;
           this.db.getAll()
             .then(function(accounts) {
+              this.isSpinnerActive = false;
               this.accounts = accounts;
               if(this.accounts && this.accounts.length === 0) {
+                this.isSpinnerActive = true;
                 this.conn.query('SELECT Id, Name FROM Account')
                   .then(function(res) {
                     console.log(res);
                     this.accounts = res.records;
-                    this.idb.putBulk(this.accounts)
+                    this.isSpinnerActive = false;
+                    this.db.putBulk(this.accounts)
                       .then(function() {
                         console.log('Initial accounts data saved');
                       })

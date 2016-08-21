@@ -1,0 +1,90 @@
+
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-listbox/paper-listbox.html">
+
+<dom-module id="my-account-details">
+
+<template>
+	<style>
+    #account {
+      @apply(--layout-vertical);
+      @apply(--layout-wrap);
+    }
+
+    #account > paper-card {
+      box-sizing: border-box;
+      margin: 4px;
+      flex: 0 0 auto;
+    }
+    paper-listbox {
+      @apply(--paper-listbox);
+    }
+	</style>
+	
+    <!-- This is contacts page <span>[[accountId]]</span>
+    <button on-tap="_queryAccount">Query</button> -->
+    <iron-selector selected="{{state}}" attr-for-selected="name">
+      <a name="accounts" href="/accounts">Back to Accounts</a>
+    </iron-selector>
+    <div id="account">
+      <paper-spinner active="[[isSpinnerActive]]" ></paper-spinner>
+      <paper-card heading="Account Details"  class="cyan">
+        <div class="card-content">
+          Account Name: [[account.Name]]
+        </div>
+      </paper-card>
+      <paper-card heading="Contacts" class="cyan">
+      </paper-card>
+      <template is="dom-repeat" items="[[account.Contacts.records]]" as = "contact" >
+        <paper-card heading="[[contact.Name]]"  class="cyan">
+          <div class="card-content">
+            Email: [[contact.Email]]
+          </div>
+        </paper-card>
+      </template>
+    </div>
+
+</template>
+<script>
+	Polymer({
+		is: 'my-account-details',
+    properties: {
+      state: {
+        type: String,
+        notify: true,
+      },
+      accountId: {
+        type: String,
+        observer: '_accountIdChanged'
+      },
+      account: {
+        type: Object,
+        notify: true
+      }
+    },
+    ready: function() {
+      this.conn = jsforce.browser.connection;
+      // this._queryAccount();
+    },
+    _accountIdChanged: function() {
+      console.log('Account Id ' + this.accountId);
+      this._queryAccount();
+    },
+    _queryAccount: function() {
+      if(this.accountId) {
+        this.isSpinnerActive = true;
+        this.conn.query('SELECT Id, Name, (SELECT Id, Name, Email from Contacts) from Account WHERE Account.Id =' + '\'' + this.accountId + '\'')
+          .then(function(res) {
+            this.isSpinnerActive = false;
+            console.log(res);
+            this.account = res.records[0];
+            console.log(this.account);
+          }.bind(this), function(err) {
+            this.isSpinnerActive = false;
+            console.log(err);
+          }.bind(this));
+      }
+    },
+	});
+</script>
+</dom-module>

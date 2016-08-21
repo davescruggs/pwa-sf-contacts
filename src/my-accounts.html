@@ -1,0 +1,221 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/google-map/google-map.html">
+<link rel="import" href="../bower_components/geo-location/geo-location.html">
+<link rel="import" href="../bower_components/idb-node/idb-node.html">
+<link rel="import" href="../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../bower_components/app-layout/app-grid/app-grid-style.html">
+<link rel="import" href="../bower_components/paper-spinner/paper-spinner.html">
+<link rel="import" href="my-accounts-list.html">
+<link rel="import" href="my-account-details.html">
+
+<dom-module id="my-accounts">
+
+  <template>
+
+    <style include="app-grid-style">
+      :host {
+        display: block;
+        padding: 10px;
+      }
+      .card {
+        box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
+        padding: 16px;
+        margin: 24px;
+        border-radius: 5px;
+        background-color: #fff;
+        color: #757575;
+      }
+      .circle {
+        display: inline-block;
+        height: 64px;
+        width: 64px;
+        border-radius: 50%;
+        background: #ddd;
+        line-height: 64px;
+        font-size: 30px;
+        color: #555;
+        text-align: center;
+      }
+      h1 {
+        font-size: 22px;
+        margin: 16px 0;
+        color: #212121;
+      }
+      google-map {
+        height: 600px;
+      }
+      #accounts {
+        @apply(--layout-vertical);
+        @apply(--layout-wrap);
+        /*height: 344px;
+        width: 384px;*/
+      }
+
+      #accounts > paper-card {
+        box-sizing: border-box;
+        /*max-width: 184px;*/
+        margin: 4px;
+        flex: 0 0 auto;
+      }
+      .col {
+        --app-grid-columns: 3;
+        --app-grid-item-height: 100px;
+      }
+
+    </style>
+
+    <app-location route="{{route}}"></app-location>
+    <app-route
+      route="{{route}}"
+      pattern="/accounts/:accountId"
+      data="{{routeData}}"
+      tail="{{accSubRoute}}">
+    </app-route>
+    <iron-pages selected="[[state]]" attr-for-selected="name">
+      <my-accounts-list name="accounts" state="{{state}}"></my-accounts-list>
+      <my-account-details name="contacts" state="{{state}}" account-id="[[routeData.accountId]]"></my-account-details>
+    </iron-pages>
+  </template>
+
+  <script>
+
+    Polymer({
+
+      is: 'my-accounts',
+      properties: {
+        // conn: {
+        //   type: Object
+        // },
+        // isLoggedIn: {
+        //   type: Boolean,
+        //   value: function() {
+        //     return jsforce.browser.isLoggedIn();
+        //   }
+        // },
+        // accounts: {
+        //   type: Array
+        // },
+        // isDbReady: {
+        //   type: Boolean,
+        //   value: function() {
+        //     return false;
+        //   }
+        // },
+        state: {
+          type: String,
+          value: function() {
+            return 'accounts';
+          },
+          notify: true
+        },
+        
+        // persistedData: Array,
+        // online: {
+        //   type: Boolean,
+        //   value: function() {
+        //     return navigator.onLine;
+        //   },
+        //   notify: true
+        // }
+      },
+      observers: ['_routePathChanged(route.path)'],
+      _routePathChanged: function(path) {
+        console.log('Path ', path);
+        if(path === '/accounts') 
+          this.state = 'accounts';
+      },
+      // ready: function() {
+        
+      //   var idb = document.querySelector('idb-node');
+      //   this.idb = idb;
+      //   idb.addEventListener('idb-ready', function() {
+      //     this.isDbReady = true;
+      //     this.db = document.querySelector('#db');
+
+      //     if(this.isLoggedIn) {
+      //       this.conn = jsforce.browser.connection;
+      //       this._queryAccounts();
+      //     } else {
+      //       jsforce.browser.on('connect', function(conn) {
+      //         this.conn = conn;
+      //       }.bind(this));
+      //     }
+
+      //   }.bind(this));
+
+
+
+      //   window.addEventListener('online', function() {
+      //     this.online = true;
+      //   }.bind(this));
+      //   window.addEventListener('offline', function() {
+      //     this.online = false;
+      //   }.bind(this));
+
+      // },
+      // _login: function() {
+      //   jsforce.browser.login(function(err, res) {
+      //     if(err) {
+      //       console.error('Error logging in: ', err);
+      //       return;
+      //     }
+      //     console.log(res);
+      //     if(res.status === 'connect') {
+      //       this.isLoggedIn = true;
+      //       this._queryAccounts();
+      //     } else {
+      //       this.isLoggedIn = false;
+      //       console.error('Error logging in: ', res);
+      //     }
+
+      //   }.bind(this));
+        
+      // },
+      // _logout: function() {
+      //   jsforce.browser.logout()
+      //   this.isLoggedIn = false;
+      //   this.accounts = [];
+      // },
+      // _queryAccounts: function() {
+
+      //   if(this.isDbReady) {
+      //     this.isSpinnerActive = true;
+      //     this.db.getAll()
+      //       .then(function(accounts) {
+      //         this.isSpinnerActive = false;
+      //         this.accounts = accounts;
+      //         if(this.accounts && this.accounts.length === 0) {
+      //           this.isSpinnerActive = true;
+      //           this.conn.query('SELECT Id, Name FROM Account')
+      //             .then(function(res) {
+      //               console.log(res);
+      //               this.accounts = res.records;
+      //               this.isSpinnerActive = false;
+      //               this.idb.putBulk(this.accounts)
+      //                 .then(function() {
+      //                   console.log('Initial accounts data saved');
+      //                 })
+      //             }.bind(this),function(err) {
+      //               console.error(err);
+      //             });
+      //         }
+      //       }.bind(this));
+      //   }
+        
+      // }
+
+    });
+
+  </script>
+
+</dom-module>

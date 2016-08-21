@@ -22,6 +22,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../bower_components/iron-selector/iron-selector.html">
 <link rel="import" href="../bower_components/polymerfire/polymerfire.html">
 <link rel="import" href="my-icons.html">
+<!-- <link rel="import" href="my-accounts.html">
+<link rel="import" href="my-view2.html">
+<link rel="import" href="my-view3.html"> -->
 <script>
 
 
@@ -88,17 +91,22 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <app-location route="{{route}}"></app-location>
     <app-route
         route="{{route}}"
-        pattern="/:page"
+        pattern="/accounts"
         data="{{routeData}}"
-        tail="{{subroute}}"></app-route>
+        tail="{{accSubRoute}}"></app-route>
+    <!-- <app-route
+        route="{{accSubRoute}}"
+        pattern="/:accountId"
+        data="{{routeData}}"
+        tail="{{subroute}}"></app-route> -->
 
     <app-drawer-layout fullbleed>
 
       <!-- Drawer content -->
       <app-drawer opened="false">
         <app-toolbar><div class="menu-title">Menu</div></app-toolbar>
-        <iron-selector selected="[[page]]" attr-for-selected="name" class="drawer-list" role="navigation">
-          <a name="view1" href="/view1">Assets Around</a>
+        <iron-selector selected="{{page}}" attr-for-selected="name" class="drawer-list" role="navigation">
+          <a name="accounts" href="/accounts">Accounts</a>
           <a name="view2" href="/view2">Add Assets</a>
           <a name="view3" href="/view3">Try Notifications</a>
         </iron-selector>
@@ -117,7 +125,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         </app-header>
 
         <iron-pages role="main" selected="[[page]]" attr-for-selected="name">
-          <my-view1 id="view1" name="view1"></my-view1>
+          <my-accounts name="accounts"></my-accounts>
           <my-view2 name="view2"></my-view2>
           <my-view3 name="view3"></my-view3>
         </iron-pages>
@@ -142,6 +150,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           reflectToAttribute: true,
           observer: '_pageChanged'
         },
+        // route: {
+        //   type: Object,
+        //   value: function() {
+        //     return {path: '/accounts', prefix: '', queryParams: {}}
+        //   }
+        // }
 
       },
       ready: function() {
@@ -158,15 +172,26 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       },
 
       observers: [
-        '_routePageChanged(routeData.page)'
+        '_routeAccountIdChanged(routeData.accountId)',
+        '_routePathChanged(route.path)'
       ],
 
-      _routePageChanged: function(page) {
-        this.page = page || 'view1';
+      _routeAccountIdChanged: function(accountId) {
+        console.log(accountId);
+        // this.page = page || 'my-accounts';
+      },
+
+      _routePathChanged: function(path) {
+        console.log(path);
+        if(path === '/' || path === '/accounts') {
+          this.page = 'accounts';
+        }
+        
       },
 
       _pageChanged: function(page) {
         // load page import on demand.
+        // console.log(page)
         this.importHref(
           this.resolveUrl('my-' + page + '.html'), null, null, true);
       },
