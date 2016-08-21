@@ -76,6 +76,7 @@
     pattern="/accounts/:accountId"
     data="{{routeData}}">
   </app-route>
+  <idb-node id="db" database-name="idb-sf2" version="1" object-store="accounts" key-path="Id"></idb-node>
   <iron-selector selected="{{state}}" attr-for-selected="name">
     <a name="accounts" href="/accounts"><paper-button class="custom indigo" raised>Back to Accounts</paper-button></a>
   </iron-selector>
@@ -149,6 +150,11 @@
     observers: ['_routeDataChanged(routeData.accountId)'],
     ready: function() {
       this.conn = jsforce.browser.connection;
+      this.$.db.addEventListener('idb-ready', function() {
+        this.isDbReady = true;
+        this.db = document.querySelector('#db');
+
+      }.bind(this));
       // this._queryAccount();
     },
     _routeDataChanged: function(accountId) {
@@ -170,10 +176,13 @@
             this.isSpinnerActive = false;
             console.log(res);
             this.account = res.records[0];
+            this.db.put(this.account);
             console.log(this.account);
           }.bind(this), function(err) {
             this.isSpinnerActive = false;
             console.log(err);
+            console.log('Serving details from cache');
+            this.account = this.db.get(this.accountId);
           }.bind(this));
       }
     },

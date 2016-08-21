@@ -4,6 +4,9 @@
   "fragments": [
     "src/my-view1.html",
     "src/my-view2.html",
-    "src/my-view3.html"
+    "src/my-view3.html",
+    "src/my-accounts.html",
+    "src/my-accounts-list.html",
+    "src/my-account-details.html"
   ]
 }

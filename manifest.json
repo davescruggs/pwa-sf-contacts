@@ -1,6 +1,6 @@
 {
-  "name": "Asset Tracker",
-  "short_name": "Fleet",
+  "name": "SF Accounts",
+  "short_name": "Accounts",
     "icons": [{
       "src": "images/app-icon-32.png",
       "type": "image/png",
@@ -22,7 +22,7 @@
       "sizes": "384x384",
       "type": "image/svg"
     }],
-  "start_url": "/",
+  "start_url": "/accounts",
   "display": "standalone",
   "background_color": "#3f51b5",
   "theme_color": "#3f51b5",
