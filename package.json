@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "main": "service-worker.js",
+  "engines": {
+    "node": "5.9.1"
+  },
   "dependencies": {
     "body-parser": "^1.15.0",
     "express": "^4.13.4",
