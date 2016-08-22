@@ -171,6 +171,12 @@
     _queryAccount: function() {
       if(this.accountId) {
         this.isSpinnerActive = true;
+        this.db.get(this.accountId).then(function(data) {
+          this.account = data;
+          console.log(this.account);
+        }.bind(this), function(err) {
+          console.log("Error retrieving from local cache ", err);
+        });
         this.conn.query('SELECT Id, Name, AccountNumber, BillingAddress, (SELECT Id, Name, Email, MobilePhone from Contacts) from Account WHERE Account.Id =' + '\'' + this.accountId + '\'')
           .then(function(res) {
             this.isSpinnerActive = false;
@@ -182,12 +188,12 @@
             this.isSpinnerActive = false;
             console.log(err);
             console.log('Serving details from cache');
-            this.db.get(this.accountId).then(function(data) {
-              this.account = data;
-              console.log(this.account);
-            }.bind(this), function(err) {
-              console.log("Error retrieving from local cache ", err);
-            });
+            // this.db.get(this.accountId).then(function(data) {
+            //   this.account = data;
+            //   console.log(this.account);
+            // }.bind(this), function(err) {
+            //   console.log("Error retrieving from local cache ", err);
+            // });
             
           }.bind(this));
       }

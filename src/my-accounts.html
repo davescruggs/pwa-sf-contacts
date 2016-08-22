@@ -132,6 +132,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       observers: ['_routePathChanged(route.path)'],
       _routePathChanged: function(path) {
         console.log('Path ', path);
+        if(path === '/') {
+          this.set('route.path', '/accounts');
+        }
         if(path === '/accounts') 
           this.state = 'accounts';
       },

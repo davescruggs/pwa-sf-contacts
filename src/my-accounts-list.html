@@ -253,26 +253,32 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           this.isSpinnerActive = true;
           this.db.getAll()
             .then(function(accounts) {
-              this.isSpinnerActive = false;
+              // this.isSpinnerActive = false;
               this.accounts = accounts;
-              if(this.accounts && this.accounts.length === 0) {
-                this.isSpinnerActive = true;
-                this.conn.query('SELECT Id, Name FROM Account')
-                  .then(function(res) {
-                    console.log(res);
-                    this.accounts = res.records;
-                    this.isSpinnerActive = false;
-                    this.db.putBulk(this.accounts)
-                      .then(function() {
-                        console.log('Initial accounts data saved');
-                      })
-                  }.bind(this),function(err) {
-                    console.error(err);
-                  });
-              }
-            }.bind(this));
+              // if(this.accounts && this.accounts.length === 0) {
+                // this.isSpinnerActive = true;
+              this.conn.query('SELECT Id, Name FROM Account')
+                .then(function(res) {
+                  console.log(res);
+                  this.accounts = res.records;
+                  this.isSpinnerActive = false;
+                  this.db.putBulk(this.accounts)
+                    .then(function() {
+                      console.log('Initial accounts data saved');
+                    })
+                }.bind(this),function(err) {
+                  console.error(err);
+                });
+              // }
+            }.bind(this), function(err) {
+              this.conn.query('SELECT Id, Name FROM Account')
+                .then(function(res) {
+                  console.log(res);
+                  this.accounts = res.records;
+                  this.isSpinnerActive = false;
+              });
+            });
         }
-        
       },
       // _toArray: function(obj) {
       //   return Object.keys(obj).map(function(key) {
