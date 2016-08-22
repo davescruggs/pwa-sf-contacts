@@ -70,7 +70,7 @@
       @apply(--paper-listbox);
     }
 	</style>
-	<app-location route="{{route}}"></app-location>
+	<app-location use-hash-as-path route="{{route}}"></app-location>
   <app-route
     route="{{route}}"
     pattern="/accounts/:accountId"
@@ -78,7 +78,7 @@
   </app-route>
   <idb-node id="db" database-name="idb-sf2" version="1" object-store="accounts" key-path="Id"></idb-node>
   <iron-selector selected="{{state}}" attr-for-selected="name">
-    <a name="accounts" href="/accounts"><paper-button class="custom indigo" raised>Back to Accounts</paper-button></a>
+    <a name="accounts" href="#/accounts"><paper-button class="custom indigo" raised>Back to Accounts</paper-button></a>
   </iron-selector>
   <div class="spinner">
     <paper-spinner active="[[isSpinnerActive]]" ></paper-spinner>
