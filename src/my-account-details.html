@@ -182,7 +182,13 @@
             this.isSpinnerActive = false;
             console.log(err);
             console.log('Serving details from cache');
-            this.account = this.db.get(this.accountId);
+            this.db.get(this.accountId).then(function(data) {
+              this.account = data;
+              console.log(this.account);
+            }.bind(this), function(err) {
+              console.log("Error retrieving from local cache ", err);
+            });
+            
           }.bind(this));
       }
     },
