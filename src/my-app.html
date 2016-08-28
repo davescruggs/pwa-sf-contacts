@@ -151,7 +151,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         // route: {
         //   type: Object,
         //   value: function() {
-        //     return {path: '/accounts', prefix: '', queryParams: {}}
+        //     return {path: '/accounts', prefix: '', queryParams: {}};
         //   }
         // }
 
@@ -159,7 +159,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ready: function() {
         jsforce.browser.init({
           clientId: '3MVG9ZL0ppGP5UrB9yKKJFrcw9noHGnylLaznou7Fe.3sOo04GFpkcqg7VfTVbhdr2dEvie2h7YMGAymi6Hi6',
-          redirectUri: 'https://young-anchorage-22172.herokuapp.com'
+          redirectUri: 'https://young-anchorage-22172.herokuapp.com',
+          //redirectUri: 'http://localhost:8080'
         });
         // this.$.auth.signInAnonymously().then(function(response) {
         //   console.log(response);
@@ -181,7 +182,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
       _routePathChanged: function(path) {
         console.log(path);
-        if(path === '/' || path === '/accounts') {
+        if(path === '/' || path === '' || path === '/accounts') {
           this.page = 'accounts';
         }
         
